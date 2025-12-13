@@ -59,6 +59,16 @@ java -jar target/tibero-exporter.jar \
     --db.name prod \
     --web.listen-port 9162 \
     --default.metrics /path/to/default_metrics.yaml
+
+# 커스텀 메트릭 파일 추가 사용 (기본 메트릭 + 커스텀 메트릭)
+java -jar target/tibero-exporter.jar \
+    --db.host 192.168.0.140 \
+    --db.port 8629 \
+    --db.user mon \
+    --db.password mon \
+    --db.name prod \
+    --web.listen-port 9162 \
+    --custom.metrics /path/to/custom_metrics.yaml
 ```
 
 ### 환경 변수 사용
@@ -159,6 +169,9 @@ metrics:
           VALUE_COL as VALUE
       FROM MY_TABLE
 ```
+
+작성한 커스텀 메트릭 파일은 실행 시 `--custom.metrics` 옵션(또는 `CUSTOM_METRICS_FILE` 환경변수)으로 지정합니다. 
+이 옵션을 사용하면 **기본 메트릭(`default_metrics.yaml`)은 그대로 유지되면서, 정의한 커스텀 메트릭이 추가로 수집**됩니다. 즉, 기본 제공되는 메트릭을 수정하지 않고도 필요한 모니터링 항목을 손쉽게 확장할 수 있습니다.
 
 ## Prometheus 설정
 
