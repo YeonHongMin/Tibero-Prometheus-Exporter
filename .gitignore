@@ -1,0 +1,59 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+env/
+ENV/
+.venv
+
+# Go
+*.exe
+*.exe~
+*.test
+*.out
+
+# Build artifacts
+*.zip
+*.tar.gz
+*.sha256
+dist/
+build/
+*.egg-info/
+target/
+dependency-reduced-pom.xml
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+hs_err_pid*.log
+
+# Distribution / packaging
+.eggs/
+*.egg
+
+# OS
+Thumbs.db
+Desktop.ini

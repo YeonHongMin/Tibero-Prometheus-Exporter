@@ -1,0 +1,246 @@
+# Tibero Database Default Metrics for Prometheus Exporter
+# Based on Oracle DB Exporter default metrics
+# Adapted for Tibero v5/v6/v7 system views
+
+metrics:
+  # =============================================================================
+  # Instance Information
+  # =============================================================================
+  - name: instance_info
+    context: instance
+    help: "Tibero instance information"
+    labels: [instance_name, version, status, host_name]
+    metrictype: gauge
+    request: |
+      SELECT 
+          INSTANCE_NAME,
+          VERSION,
+          STATUS,
+          HOST_NAME,
+          1 as VALUE
+      FROM V$INSTANCE
+
+  # =============================================================================
+  # Database Status
+  # =============================================================================
+  - name: database_status
+    context: database
+    help: "Database status (1=OPEN, 0=OTHER)"
+    labels: [name, open_mode, log_mode]
+    metrictype: gauge
+    request: |
+      SELECT
+          NAME,
+          OPEN_MODE,
+          LOG_MODE,
+          CASE WHEN OPEN_MODE = 'READ WRITE' THEN 1 ELSE 0 END as VALUE
+      FROM V$DATABASE
+
+  # =============================================================================
+  # System Statistics (V$SYSSTAT)
+  # =============================================================================
+  # - name: sysstat
+  #   context: sysstat
+  #   help: "System statistics from V$SYSSTAT"
+  #   labels: [name]
+  #   metrictype: counter
+  #   request: |
+  #     SELECT 
+  #         NAME,
+  #         VALUE
+  #     FROM V$SYSSTAT
+  #     WHERE NAME IN (
+  #         'user commits',
+  #         'user rollbacks',
+  #         'user calls',
+  #         'recursive calls',
+  #         'session logical reads',
+  #         'block disk read',
+  #         'block disk write',
+  #         'consistent block gets',
+  #         'current block gets',
+  #         'parse count (total)',
+  #         'parse count (hard)',
+  #         'parse count (soft)',
+  #         'execute count',
+  #         'sorts (memory)',
+  #         'sorts (disk)',
+  #         'redo size',
+  #         'redo writes'
+  #     )
+
+  # =============================================================================
+  # Session Statistics
+  # =============================================================================
+  - name: sessions
+    context: sessions
+    help: "Number of database sessions by status and type"
+    labels: [status, type]
+    metrictype: gauge
+    request: |
+      SELECT 
+          STATUS,
+          TYPE,
+          COUNT(*) as VALUE
+      FROM V$SESSION
+      GROUP BY STATUS, TYPE
+
+  - name: sessions_total
+    context: sessions
+    help: "Total number of sessions"
+    labels: []
+    metrictype: gauge
+    request: |
+      SELECT COUNT(*) as VALUE FROM V$SESSION
+
+  - name: sessions_active
+    context: sessions
+    help: "Number of active sessions"
+    labels: []
+    metrictype: gauge
+    request: |
+      SELECT COUNT(*) as VALUE FROM V$SESSION WHERE STATUS = 'ACTIVE'
+
+  # =============================================================================
+  # Process Statistics
+  # =============================================================================
+  - name: process_count
+    context: process
+    help: "Number of processes"
+    labels: []
+    metrictype: gauge
+    request: |
+      SELECT COUNT(*) as VALUE FROM V$PROCESS
+
+  # =============================================================================
+  # Wait Events (V$SYSTEM_EVENT)
+  # =============================================================================
+  # - name: wait_event
+  #   context: wait
+  #   help: "Wait event statistics from V$SYSTEM_EVENT"
+  #   labels: [event]
+  #   metrictype: counter
+  #   fieldtoname:
+  #     TOTAL_WAITS: total_waits
+  #     TIME_WAITED: time_waited_seconds
+  #   request: |
+  #     SELECT 
+  #         EVENT,
+  #         TOTAL_WAITS,
+  #         TIME_WAITED / 100 as TIME_WAITED
+  #     FROM V$SYSTEM_EVENT
+  #     WHERE TOTAL_WAITS > 0
+  #     ORDER BY TIME_WAITED DESC
+  #     FETCH FIRST 50 ROWS ONLY
+
+  # =============================================================================
+  # Tablespace Usage
+  # =============================================================================
+  # - name: tablespace_size
+  #   context: tablespace
+  #   help: "Tablespace size information in bytes"
+  #   labels: [tablespace_name]
+  #   metrictype: gauge
+  #   fieldtoname:
+  #     TOTAL_BYTES: total_bytes
+  #     USED_BYTES: used_bytes
+  #     FREE_BYTES: free_bytes
+  #     PCT_USED: pct_used
+  #   request: |
+  #     SELECT 
+  #         t.TABLESPACE_NAME,
+  #         t.TOTAL_BYTES,
+  #         t.TOTAL_BYTES - NVL(f.FREE_BYTES, 0) as USED_BYTES,
+  #         NVL(f.FREE_BYTES, 0) as FREE_BYTES,
+  #         ROUND((t.TOTAL_BYTES - NVL(f.FREE_BYTES, 0)) / t.TOTAL_BYTES * 100, 2) as PCT_USED
+  #     FROM (
+  #         SELECT TABLESPACE_NAME, SUM(BYTES) as TOTAL_BYTES
+  #         FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME
+  #     ) t
+  #     LEFT JOIN (
+  #         SELECT TABLESPACE_NAME, SUM(BYTES) as FREE_BYTES
+  #         FROM DBA_FREE_SPACE GROUP BY TABLESPACE_NAME
+  #     ) f ON t.TABLESPACE_NAME = f.TABLESPACE_NAME
+
+  # =============================================================================
+  # Buffer Cache Statistics
+  # =============================================================================
+  # - name: buffer_cache_hit_ratio
+  #   context: buffer
+  #   help: "Buffer cache hit ratio"
+  #   labels: []
+  #   metrictype: gauge
+  #   request: |
+  #     SELECT 
+  #         ROUND(
+  #             (1 - (
+  #                 (SELECT VALUE FROM V$SYSSTAT WHERE NAME = 'block disk read') /
+  #                 NULLIF((SELECT VALUE FROM V$SYSSTAT WHERE NAME = 'consistent block gets') + 
+  #                        (SELECT VALUE FROM V$SYSSTAT WHERE NAME = 'current block gets'), 0)
+  #             )) * 100, 2
+  #         ) as VALUE
+  #     FROM DUAL
+
+  # =============================================================================
+  # SGA Statistics
+  # =============================================================================
+  - name: sga_size
+    context: sga
+    help: "SGA component sizes in bytes"
+    labels: [name]
+    metrictype: gauge
+    fieldtoname:
+      TOTAL: total_bytes
+      USED: used_bytes
+    request: |
+      SELECT NAME, TOTAL, USED FROM V$SGA
+
+  # =============================================================================
+  # PGA Statistics
+  # =============================================================================
+  - name: pga_stat
+    context: pga
+    help: "PGA statistics"
+    labels: [name]
+    metrictype: gauge
+    request: |
+      SELECT NAME, VALUE FROM V$PGASTAT
+      WHERE NAME IN (
+          'total PGA inuse',
+          'total PGA allocated',
+          'maximum PGA allocated'
+      )
+
+  # =============================================================================
+  # Lock Statistics
+  # =============================================================================
+  - name: lock_count
+    context: lock
+    help: "Number of locks by type"
+    labels: [lock_type]
+    metrictype: gauge
+    request: |
+      SELECT TYPE as LOCK_TYPE, COUNT(*) as VALUE
+      FROM V$LOCK WHERE TYPE IS NOT NULL GROUP BY TYPE
+
+  # =============================================================================
+  # Transaction Statistics
+  # =============================================================================
+  - name: transactions_active
+    context: transaction
+    help: "Number of active transactions"
+    labels: []
+    metrictype: gauge
+    request: |
+      SELECT COUNT(*) as VALUE FROM V$TRANSACTION
+
+  # =============================================================================
+  # Uptime
+  # =============================================================================
+  - name: uptime_seconds
+    context: instance
+    help: "Database instance uptime in seconds"
+    labels: []
+    metrictype: counter
+    request: |
+      SELECT (SYSDATE - STARTUP_TIME) * 86400 as VALUE FROM V$INSTANCE
