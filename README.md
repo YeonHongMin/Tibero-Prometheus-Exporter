@@ -189,21 +189,7 @@ scrape_configs:
 모니터링 사용자에게 다음 뷰에 대한 SELECT 권한이 필요합니다:
 
 ```sql
-GRANT SELECT ON V$INSTANCE TO monitoring_user;
-GRANT SELECT ON V$DATABASE TO monitoring_user;
-GRANT SELECT ON V$SYSSTAT TO monitoring_user;
-GRANT SELECT ON V$SESSION TO monitoring_user;
-GRANT SELECT ON V$SYSTEM_EVENT TO monitoring_user;
-GRANT SELECT ON V$PROCESS TO monitoring_user;
-GRANT SELECT ON V$LOCK TO monitoring_user;
-GRANT SELECT ON V$TRANSACTION TO monitoring_user;
-GRANT SELECT ON V$SGA TO monitoring_user;
-GRANT SELECT ON V$SGASTAT TO monitoring_user;
-GRANT SELECT ON V$PGASTAT TO monitoring_user;
-GRANT SELECT ON V$RESOURCE_LIMIT TO monitoring_user;
-GRANT SELECT ON DBA_DATA_FILES TO monitoring_user;
-GRANT SELECT ON DBA_FREE_SPACE TO monitoring_user;
-GRANT SELECT ON DBA_TABLESPACES TO monitoring_user;
+GRANT SELECT ANY DICTIONARY monitoring_user;
 ```
 
 ## 아키텍처
