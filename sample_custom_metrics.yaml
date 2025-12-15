@@ -1,0 +1,47 @@
+metrics:
+# =============================================================================
+# System Statistics (User Calls, I/O, Redo, etc.)
+# =============================================================================
+  - name: sysstat_value
+    context: tib_sysstat
+    help: "Generic counter metric from V$SYSSTAT in Tibero"
+    labels: [NAME]
+    metrictype: counter
+    request: |
+      SELECT NAME, ROUND(VALUE,4) AS VALUE FROM V$SYSSTAT
+      WHERE NAME
+      IN (
+        'SQL processing count',
+        'req service time',
+        'redo log size',
+        'consistent block gets',
+        'consistent multi gets - blocks',
+        'current block gets',
+        'consistent block gets - readonly pin',
+        'consistent block gets examine',
+        'current block gets examine',
+        'consistent block gets examine - nowait',
+        'current block gets - no wait',
+        'block changes - current + consistent',
+        'block disk read',
+        'multi block disk read - blocks',
+        'dbwr written block count',
+        'req total count',
+        'parse count (total)',
+        'parse count (hard)',
+        'logons cumulative',
+        'execute count',
+        'user rollbacks',
+        'transactions')
+      ORDER BY 1
+
+# =============================================================================
+# Sysmetric Statistics (Host CPU Utilzation, Buffer Cache Hit Ratio, etc.)
+# =============================================================================
+  - name: sysmetric_value
+    context: tib_sysmetric
+    help: "Generic gauage metric from V$METRIC in Tibero"
+    labels: [METRIC_NAME]
+    metrictype: gauage
+    request: |
+      SELECT METRIC_NAME, ROUND(VALUE,4) AS VALUE FROM V$METRIC WHERE GROUP_NAME='SYSTEM_SHORT' ORDER BY 1
